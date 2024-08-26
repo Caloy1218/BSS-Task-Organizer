@@ -1,30 +1,47 @@
 import React, { useState } from "react";
 import { auth } from "../firebaseConfig";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { TextField, Button, Typography, Box, Container } from "@mui/material";
+import { db } from "../firebaseConfig"; // Import Firestore
+import { doc, setDoc } from "firebase/firestore"; // Import Firestore functions
 
 const SignUp = () => {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [position, setPosition] = useState(""); // New state for Position
   const [error, setError] = useState("");
 
   const handleSignUp = async (e) => {
     e.preventDefault();
-
+  
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
-
+  
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  
+      // Update user profile with full name
+      await updateProfile(userCredential.user, {
+        displayName: fullName,
+      });
+  
+      // Store the user's full name and position in Firestore
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        fullName: fullName,
+        email: email,
+        position: position,
+      });
+  
       alert("User registered successfully!");
     } catch (err) {
       setError(err.message);
     }
   };
-
+  
   return (
     <Container maxWidth="xs">
       <Box
@@ -39,6 +56,15 @@ const SignUp = () => {
           Sign Up
         </Typography>
         <Box component="form" onSubmit={handleSignUp} sx={{ mt: 3 }}>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            label="Full Name"
+            type="text"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+          />
           <TextField
             margin="normal"
             required
@@ -65,6 +91,15 @@ const SignUp = () => {
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            label="Position"
+            type="text"
+            value={position}
+            onChange={(e) => setPosition(e.target.value)}
           />
           {error && (
             <Typography color="error" variant="body2" sx={{ mt: 1 }}>
