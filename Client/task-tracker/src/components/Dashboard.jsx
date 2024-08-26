@@ -8,47 +8,45 @@ const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
-    const q = query(collection(db, "tasks"));
+    const q = query(collection(db, "users")); // Fetch from "users" collection
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const tasksData = [];
+      const usersData = [];
       snapshot.forEach((doc) => {
-        tasksData.push({ ...doc.data(), id: doc.id });
+        usersData.push({ ...doc.data(), id: doc.id });
       });
-      setTasks(tasksData);
+      setTasks(usersData); // Store the user data in tasks
     });
 
     return () => unsubscribe();
   }, []);
 
-  // Define the columns for the DataGrid
   const columns = [
     {
-      field: 'avatar',
-      headerName: 'Avatar',
+      field: "avatar",
+      headerName: "Avatar",
       width: 100,
       renderCell: (params) => (
         <Avatar src={params.value || "/static/images/avatar/1.jpg"} />
-      )
+      ),
     },
-    { field: 'name', headerName: 'Name', width: 150 },
-    { field: 'position', headerName: 'Position', width: 150 },
+    { field: "name", headerName: "Name", width: 150 }, // Full name
+    { field: "position", headerName: "Position", width: 150 }, // Position
   ];
 
-  // Prepare the rows for the DataGrid
-  const rows = tasks.map((task) => ({
-    id: task.id,
-    avatar: task.avatarUrl || "", // Assuming avatar URL is stored in the `avatarUrl` field
-    name: task.name || "Anonymous", // Default to "Anonymous" if no name
-    position: task.position || "Not specified", // Default if no position
+  const rows = tasks.map((user) => ({
+    id: user.id,
+    avatar: user.avatarUrl || "",
+    name: user.fullName || "Anonymous",
+    position: user.position || "Not specified",
   }));
 
   return (
     <Container maxWidth="lg">
       <Box sx={{ mt: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          Task Dashboard
+          User Dashboard
         </Typography>
-        <div style={{ height: 400, width: '100%' }}>
+        <div style={{ height: 400, width: "100%" }}>
           <DataGrid
             rows={rows}
             columns={columns}

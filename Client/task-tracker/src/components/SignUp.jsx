@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { auth } from "../firebaseConfig";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { TextField, Button, Typography, Box, Container } from "@mui/material";
+import { db } from "../firebaseConfig"; // Import Firestore
+import { doc, setDoc } from "firebase/firestore"; // Import Firestore functions
 
 const SignUp = () => {
   const [fullName, setFullName] = useState("");
@@ -13,27 +15,33 @@ const SignUp = () => {
 
   const handleSignUp = async (e) => {
     e.preventDefault();
-
+  
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
-
+  
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-
+  
       // Update user profile with full name
       await updateProfile(userCredential.user, {
         displayName: fullName,
-        // You may store the position in Firestore as part of a user document
       });
-
+  
+      // Store the user's full name and position in Firestore
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        fullName: fullName,
+        email: email,
+        position: position,
+      });
+  
       alert("User registered successfully!");
     } catch (err) {
       setError(err.message);
     }
   };
-
+  
   return (
     <Container maxWidth="xs">
       <Box
